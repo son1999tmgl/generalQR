@@ -28,6 +28,23 @@ function randomAlphanumeric(length) {
   return out;
 }
 
+function randomLowerAlphanumeric(length) {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let out = "";
+  for (let i = 0; i < length; i += 1) {
+    out += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return out;
+}
+
+function random22Digit() {
+  let num = (Math.floor(Math.random() * 9) + 1).toString();
+  for (let i = 1; i < 22; i++) {
+    num += Math.floor(Math.random() * 10).toString();
+  }
+  return num;
+}
+
 function randomWrongString() {
   // Generate a string that's likely to be invalid for the common formats.
   // We'll randomly choose a length that is not 32 and allow special chars.
@@ -43,8 +60,8 @@ function randomWrongString() {
 
 function loadSettings() {
   const defaults = {
-    thung: "^[A-Za-z0-9]{32}$",
-    sanPham: "^https://traceviet\\.mae\\.gov\\.vn/[^/]+/[A-Za-z0-9]{32}$",
+    thung: "^[a-z0-9]{32}$",
+    sanPham: "^https://traceviet\\.mae\\.gov\\.vn/[^/]+/[1-9][0-9]{21}$",
     cong: "^https://traceviet\\.mae\\.gov\\.vn/cong/[A-Za-z0-9]{32}$",
   };
 
@@ -74,21 +91,66 @@ function generateFromRegex(pattern) {
     return randomAlphanumeric(32);
   }
 
+  if (pattern === "^[a-z0-9]{32}$") {
+    return randomLowerAlphanumeric(32);
+  }
+
+  if (pattern === "^https://traceviet\\.mae\\.gov\\.vn/[^/]+/[1-9][0-9]{21}$") {
+    const path = randomAlphanumeric(8);
+    const code = random22Digit();
+    return `https://traceviet.mae.gov.vn/${path}/${code}`;
+  }
+
   // Basic support for patterns like:
   // ^[A-Za-z0-9]{32}$
   // ^https://.../[A-Za-z0-9]{32}$
-  const match = pattern.match(/^\^(.*)\[A-Za-z0-9\]\{(\d+)\}\$$/);
+  const match = pattern.match(/^\^(.*)\[([A-Za-z0-9-]+)\]\{(\d+)\}\$$/);
   if (match) {
     // Unescape regex escapes so the generated string contains normal characters.
     // E.g. turn "https://traceviet\\.mae\\.gov\\.vn/" into "https://traceviet.mae.gov.vn/".
     let prefix = match[1].replace(/\\(.)/g, "$1");
 
     // Support `[^/]+` in the prefix by replacing it with a random path segment.
-    // Example: https://traceviet.mae.gov.vn/[^/]+/ => https://traceviet.mae.gov.vn/abc123de/
+    // If the regex contains repeats like `(?:[^/]+/){1,3}`, we also generate the correct number of segments.
+    const repeatPattern = /\(\?:\[\^\/\]\+\/\)\{(\d+)(?:,(\d+))?\}/g;
+    prefix = prefix.replace(repeatPattern, (_, min, max) => {
+      const nMin = Number(min);
+      const nMax = max ? Number(max) : nMin;
+      const count = nMax === nMin ? nMin : Math.floor(Math.random() * (nMax - nMin + 1)) + nMin;
+      return Array.from({ length: count }, () => randomAlphanumeric(8)).map((s) => `${s}/`).join("");
+    });
+
+    // Support `(?:[^/]+/)+` and `(?:[^/]+/)*` patterns.
+    prefix = prefix.replace(/\(\?:\[\^\/\]\+\/\)\+/g, () => {
+      const count = Math.floor(Math.random() * 3) + 1; // 1..3
+      return Array.from({ length: count }, () => randomAlphanumeric(8)).map((s) => `${s}/`).join("");
+    });
+    prefix = prefix.replace(/\(\?:\[\^\/\]\+\/\)\*/g, () => {
+      const count = Math.floor(Math.random() * 3); // 0..2
+      return Array.from({ length: count }, () => randomAlphanumeric(8)).map((s) => `${s}/`).join("");
+    });
+
     prefix = prefix.replace(/\[\^\/\]\+/g, () => randomAlphanumeric(8));
 
-    const len = Number(match[2]);
-    return prefix + randomAlphanumeric(len);
+    const chars = match[2];
+    const len = Number(match[3]);
+
+    let randomFunc;
+    if (chars === "A-Za-z0-9") {
+      randomFunc = () => randomAlphanumeric(1);
+    } else if (chars === "a-z0-9") {
+      randomFunc = () => randomLowerAlphanumeric(1);
+    } else if (chars === "0-9") {
+      randomFunc = () => Math.floor(Math.random() * 10).toString();
+    } else {
+      randomFunc = () => randomAlphanumeric(1); // fallback
+    }
+
+    let code = "";
+    for (let i = 0; i < len; i += 1) {
+      code += randomFunc();
+    }
+    return prefix + code;
   }
 
   // Fallback: generate something alphanumeric.
