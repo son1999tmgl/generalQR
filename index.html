@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>QR Code Generator - Thùng / Sản phẩm</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main>
+    <header>
+      <h1>QR Code Generator</h1>
+      <p>Chọn loại, chọn đúng/sai, rồi nhấn tạo mã. Mã sẽ được lưu vào <code>localStorage</code>.</p>
+    </header>
+
+    <section class="settings">
+      <h2>Cài đặt format (Regex)</h2>
+      <p class="settings-note">Nhập regex cho từng loại. Khi bấm "Lưu cài đặt", các mã mới sẽ dùng format này.</p>
+      <div class="settings-grid">
+        <div class="setting-group">
+          <label for="format-thung">Thùng (regex)</label>
+          <input type="text" id="format-thung" value="^[A-Za-z0-9]{32}$" />
+        </div>
+        <div class="setting-group">
+          <label for="format-sanpham">Sản phẩm (regex)</label>
+          <input type="text" id="format-sanpham" value="^https://traceviet\.mae\.gov\.vn/[A-Za-z0-9]{32}$" />
+        </div>
+        <div class="setting-group">
+          <label for="format-cong">Công (regex)</label>
+          <input type="text" id="format-cong" value="^https://traceviet\.mae\.gov\.vn/cong/[A-Za-z0-9]{32}$" />
+        </div>
+      </div>
+      <button id="saveSettings" class="primary">Lưu cài đặt</button>
+    </section>
+
+    <section class="form">
+      <div class="row">
+        <div class="group">
+          <label>Loại mã</label>
+          <button id="btn-thung" class="primary">Thùng</button>
+          <button id="btn-sanpham" class="primary">Sản phẩm</button>
+          <button id="btn-cong" class="primary">Công</button>
+        </div>
+
+        <div class="group">
+          <label>Định dạng</label>
+          <label class="radio">
+            <input type="radio" name="mode" value="true" checked /> Đúng
+          </label>
+          <label class="radio">
+            <input type="radio" name="mode" value="false" /> Sai
+          </label>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="group">
+          <label for="customText">Nhập text tự do</label>
+          <input id="customText" type="text" placeholder="Nhập text tùy ý..." />
+        </div>
+        <div class="group" style="align-self: flex-end; padding-top: 8px;">
+          <button id="btn-custom" class="secondary">Tạo QR từ text</button>
+        </div>
+      </div>
+
+      <div class="result" aria-live="polite">
+        <div class="result-item">
+          <div>
+            <strong>Mã đã tạo</strong>
+            <div id="generatedValue" class="code"></div>
+          </div>
+          <div id="qr" class="qr"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="history">
+      <h2>Danh sách mã đã tạo</h2>
+      <div class="history-grid">
+        <div class="history-column">
+          <h3>Thùng</h3>
+          <div id="historyThung" class="history-list"></div>
+        </div>
+        <div class="history-column">
+          <h3>Sản phẩm</h3>
+          <div id="historySanPham" class="history-list"></div>
+        </div>
+        <div class="history-column">
+          <h3>Công</h3>
+          <div id="historyCong" class="history-list"></div>
+        </div>
+        <div class="history-column">
+          <h3>Tùy</h3>
+          <div id="historyCustom" class="history-list"></div>
+        </div>
+      </div>
+
+      <button id="clearHistory" class="secondary">Xóa lịch sử</button>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
