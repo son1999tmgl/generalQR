@@ -101,6 +101,37 @@ function generateFromRegex(pattern) {
     return `https://traceviet.mae.gov.vn/${path}/${code}`;
   }
 
+  // Special-case: pattern like `^.../[1-9][0-9]{N}$` (non-zero first digit + N digits)
+  const matchNonZero = pattern.match(/^\^(.*)\[1-9\]\[0-9\]\{(\d+)\}\$$/);
+  if (matchNonZero) {
+    let prefix = matchNonZero[1].replace(/\\(.)/g, "$1");
+    // Reuse the same prefix handling as below
+    const repeatPattern = /\(\?:\[\^\/\]\+\/\)\{(\d+)(?:,(\d+))?\}/g;
+    prefix = prefix.replace(repeatPattern, (_, min, max) => {
+      const nMin = Number(min);
+      const nMax = max ? Number(max) : nMin;
+      const count = nMax === nMin ? nMin : Math.floor(Math.random() * (nMax - nMin + 1)) + nMin;
+      return Array.from({ length: count }, () => randomAlphanumeric(8)).map((s) => `${s}/`).join("");
+    });
+
+    prefix = prefix.replace(/\(\?:\[\^\/\]\+\/\)\+/g, () => {
+      const count = Math.floor(Math.random() * 3) + 1; // 1..3
+      return Array.from({ length: count }, () => randomAlphanumeric(8)).map((s) => `${s}/`).join("");
+    });
+    prefix = prefix.replace(/\(\?:\[\^\/\]\+\/\)\*/g, () => {
+      const count = Math.floor(Math.random() * 3); // 0..2
+      return Array.from({ length: count }, () => randomAlphanumeric(8)).map((s) => `${s}/`).join("");
+    });
+    prefix = prefix.replace(/\[\^\/\]\+/g, () => randomAlphanumeric(8));
+
+    const tailDigits = Number(matchNonZero[2]);
+    let code = (Math.floor(Math.random() * 9) + 1).toString();
+    for (let i = 0; i < tailDigits; i += 1) {
+      code += Math.floor(Math.random() * 10).toString();
+    }
+    return prefix + code;
+  }
+
   // Basic support for patterns like:
   // ^[A-Za-z0-9]{32}$
   // ^https://.../[A-Za-z0-9]{32}$
