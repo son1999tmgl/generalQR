@@ -44,7 +44,7 @@ function randomWrongString() {
 function loadSettings() {
   const defaults = {
     thung: "^[A-Za-z0-9]{32}$",
-    sanPham: "^https://traceviet\\.mae\\.gov\\.vn/[A-Za-z0-9]{32}$",
+    sanPham: "^https://traceviet\\.mae\\.gov\\.vn/[^/]+/[A-Za-z0-9]{32}$",
     cong: "^https://traceviet\\.mae\\.gov\\.vn/cong/[A-Za-z0-9]{32}$",
   };
 
@@ -81,7 +81,12 @@ function generateFromRegex(pattern) {
   if (match) {
     // Unescape regex escapes so the generated string contains normal characters.
     // E.g. turn "https://traceviet\\.mae\\.gov\\.vn/" into "https://traceviet.mae.gov.vn/".
-    const prefix = match[1].replace(/\\(.)/g, "$1");
+    let prefix = match[1].replace(/\\(.)/g, "$1");
+
+    // Support `[^/]+` in the prefix by replacing it with a random path segment.
+    // Example: https://traceviet.mae.gov.vn/[^/]+/ => https://traceviet.mae.gov.vn/abc123de/
+    prefix = prefix.replace(/\[\^\/\]\+/g, () => randomAlphanumeric(8));
+
     const len = Number(match[2]);
     return prefix + randomAlphanumeric(len);
   }

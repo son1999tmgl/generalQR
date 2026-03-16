@@ -23,14 +23,17 @@
         </div>
         <div class="setting-group">
           <label for="format-sanpham">Sản phẩm (regex)</label>
-          <input type="text" id="format-sanpham" value="^https://traceviet\.mae\.gov\.vn/[A-Za-z0-9]{32}$" />
+          <input type="text" id="format-sanpham" value="^https://traceviet\.mae\.gov\.vn/[^/]+/[A-Za-z0-9]{32}$" />
         </div>
         <div class="setting-group">
           <label for="format-cong">Công (regex)</label>
           <input type="text" id="format-cong" value="^https://traceviet\.mae\.gov\.vn/cong/[A-Za-z0-9]{32}$" />
         </div>
       </div>
-      <button id="saveSettings" class="primary">Lưu cài đặt</button>
+      <div class="settings-actions">
+        <button id="saveSettings" class="primary">Lưu cài đặt</button>
+        <button id="resetSettings" class="secondary" type="button">Reset mặc định</button>
+      </div>
     </section>
 
     <section class="form">
