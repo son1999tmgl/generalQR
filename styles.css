@@ -201,3 +201,10 @@ button:hover:not(:disabled) {
     grid-template-columns: 1fr;
   }
 }
+#historyThung,
+#historySanPham,
+#historyCong,
+#historyCustom {
+  max-height: 500px;
+  overflow-y: auto;
+}
