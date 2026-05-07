@@ -2,106 +2,59 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>QR Code Generator - Thùng / Sản phẩm</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Generator</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main>
-    <header>
-      <h1>QR Code Generator</h1>
-      <p>Chọn loại, chọn đúng/sai, rồi nhấn tạo mã. Mã sẽ được lưu vào <code>localStorage</code>.</p>
-    </header>
+  <div class="page">
 
-    <section class="settings">
-      <h2>Cài đặt format (Regex)</h2>
-      <p class="settings-note">Nhập regex cho từng loại. Khi bấm "Lưu cài đặt", các mã mới sẽ dùng format này.</p>
-      <div class="settings-grid">
-        <div class="setting-group">
-          <label for="format-thung">Thùng (regex)</label>
-          <input type="text" id="format-thung" value="^[A-Za-z0-9]{32}$" />
-        </div>
-        <div class="setting-group">
-          <label for="format-sanpham">Sản phẩm (regex)</label>
-          <input type="text" id="format-sanpham" value="^https://traceviet\.mae\.gov\.vn/(?:[^/]+/){1,3}[A-Za-z0-9]{32}$" />
-        </div>
-        <div class="setting-group">
-          <label for="format-cong">Công (regex)</label>
-          <input type="text" id="format-cong" value="^[A-Za-z0-9]{32}$" />
-        </div>
+    <!-- Cột trái: inputs -->
+    <div class="left-col">
+
+      <h1>QR Generator</h1>
+
+      <!-- Cài đặt kích thước -->
+      <div class="settings-bar">
+        <label for="cell-size">Kích thước:</label>
+        <input type="range" id="cell-size" min="0.5" max="5" step="0.5" value="2" />
+        <span id="cell-size-display"></span>
       </div>
-      <div class="settings-actions">
-        <button id="saveSettings" class="primary">Lưu cài đặt</button>
-      </div>
-    </section>
 
-    <section class="form">
-      <div class="row">
-        <div class="group">
-          <label>Loại mã</label>
-          <button id="btn-thung" class="primary">Thùng</button>
-          <button id="btn-sanpham" class="primary">Sản phẩm</button>
-          <button id="btn-cong" class="primary">Công</button>
-        </div>
+      <!-- Sinh từ Regex -->
+      <section class="card">
+        <h2>Sinh từ Regex</h2>
+        <div id="regex-rows"></div>
+      </section>
 
-        <div class="group">
-          <label>Định dạng</label>
-          <label class="radio">
-            <input type="radio" name="mode" value="true" checked /> Đúng
+      <!-- Sinh từ Text -->
+      <section class="card">
+        <h2>Sinh từ Text</h2>
+        <div class="text-controls">
+          <input type="text" id="text-input" placeholder="Nhập chuỗi, vd: TSR260001649" />
+          <label class="auto-incr-label">
+            <input type="checkbox" id="auto-incr" />
+            Tăng dần
           </label>
-          <label class="radio">
-            <input type="radio" name="mode" value="false" /> Sai
-          </label>
+          <button class="btn btn--primary" id="gen-text">Sinh QR</button>
         </div>
+      </section>
+
+    </div>
+
+    <!-- Cột phải: QR chung -->
+    <div class="right-col">
+      <div class="qr-display card">
+        <h2>Kết quả</h2>
+        <canvas id="qr-canvas" style="display:none"></canvas>
+        <p id="qr-text" class="qr-text"></p>
+        <button class="btn btn--secondary" id="download-btn" style="display:none">Tải PNG</button>
       </div>
+    </div>
 
-      <div class="row">
-        <div class="group">
-          <label for="customText">Nhập text tự do</label>
-          <input id="customText" type="text" placeholder="Nhập text tùy ý..." />
-        </div>
-        <div class="group" style="align-self: flex-end; padding-top: 8px;">
-          <button id="btn-custom" class="secondary">Tạo QR từ text</button>
-        </div>
-      </div>
+  </div>
 
-      <div class="result" aria-live="polite">
-        <div class="result-item">
-          <div>
-            <strong>Mã đã tạo</strong>
-            <div id="generatedValue" class="code"></div>
-          </div>
-          <div id="qr" class="qr"></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="history">
-      <h2>Danh sách mã đã tạo</h2>
-      <div class="history-grid">
-        <div class="history-column">
-          <h3>Thùng</h3>
-          <div id="historyThung" class="history-list"></div>
-        </div>
-        <div class="history-column">
-          <h3>Sản phẩm</h3>
-          <div id="historySanPham" class="history-list"></div>
-        </div>
-        <div class="history-column">
-          <h3>Công</h3>
-          <div id="historyCong" class="history-list"></div>
-        </div>
-        <div class="history-column">
-          <h3>Tùy</h3>
-          <div id="historyCustom" class="history-list"></div>
-        </div>
-      </div>
-
-      <button id="clearHistory" class="secondary">Xóa lịch sử</button>
-    </section>
-  </main>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
