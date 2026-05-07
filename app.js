@@ -35,7 +35,7 @@ function shuffle(arr) {
 function generateRegionColors() {
   const colors   = shuffle(PALETTE);       // [dominant, c1, c2, c3]
   const dominant = colors[0];
-  const dominantCount = Math.random() < 0.5 ? 2 : 3;
+  const dominantCount = Math.random() < 0.8 ? 2 : 3; // tỉ lệ 8:2
 
   // map[0..3] = 4 góc (topLeft, topRight, bottomLeft, bottomRight), map[4] = center
   const map     = Array(5).fill(null);
