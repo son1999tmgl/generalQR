@@ -14,6 +14,14 @@ const QR_TYPES = [
 
 const STORAGE_KEY = 'qr_config';
 
+// Nhãn và màu badge cho từng loại QR
+const TYPE_META = {
+  sanpham: { label: 'Sản phẩm', color: '#dbeafe', text: '#1d4ed8' },
+  thung:   { label: 'Thùng',    color: '#dcfce7', text: '#15803d' },
+  cong:    { label: 'Công',     color: '#fef9c3', text: '#a16207' },
+  text:    { label: 'Text',     color: '#f3f4f6', text: '#374151' },
+};
+
 /* ================================================================
    COLOR UTILITIES
    ================================================================ */
@@ -250,26 +258,136 @@ function saveConfig(updates) {
    SHARED QR DISPLAY
    ================================================================ */
 
-// Trạng thái QR hiện tại — dùng để re-render khi đổi kích thước
 let lastQRText   = '';
 let lastQRColors = null;
 
-// Render lại với text + màu cho sẵn (không sinh màu mới)
-function redrawQR() {
-  if (!lastQRText || !lastQRColors) return;
-  const canvas = document.getElementById('qr-canvas');
-  renderQR(lastQRText, canvas, getCellSize(), lastQRColors);
-}
-
-// Sinh QR mới: tạo màu mới, lưu lại, render
-function showQR(text) {
+// Hiện QR lên vùng chung (dùng chung cho sinh mới lẫn xem lại từ log)
+function displayQR(text, colors) {
   lastQRText   = text;
-  lastQRColors = generateRegionColors();
+  lastQRColors = colors;
   const canvas = document.getElementById('qr-canvas');
-  renderQR(text, canvas, getCellSize(), lastQRColors);
+  renderQR(text, canvas, getCellSize(), colors);
   canvas.style.display = 'block';
   document.getElementById('qr-text').textContent = text;
   document.getElementById('download-btn').style.display = 'inline-block';
+}
+
+// Render lại kích thước (không đổi màu, không lưu log)
+function redrawQR() {
+  if (!lastQRText || !lastQRColors) return;
+  renderQR(lastQRText, document.getElementById('qr-canvas'), getCellSize(), lastQRColors);
+}
+
+// Sinh QR mới: tạo màu → hiện → lưu log
+function showQR(text, type = 'text') {
+  const colors = generateRegionColors();
+  displayQR(text, colors);
+  saveLogEntry(text, colors, type);
+}
+
+/* ================================================================
+   LOG
+   ================================================================ */
+
+const LOG_KEY = 'qr_log';
+const LOG_MAX = 200;
+
+function loadLog() {
+  try { return JSON.parse(localStorage.getItem(LOG_KEY)) || []; }
+  catch { return []; }
+}
+
+function saveLogEntry(text, colors, type = 'text') {
+  const log = loadLog();
+  log.unshift({
+    id: Date.now(),
+    text,
+    colors,
+    type,
+    time: new Date().toLocaleString('vi-VN'),
+  });
+  if (log.length > LOG_MAX) log.pop();
+  localStorage.setItem(LOG_KEY, JSON.stringify(log));
+  renderLog();
+}
+
+function deleteLogEntry(id) {
+  const log = loadLog().filter(e => e.id !== id);
+  localStorage.setItem(LOG_KEY, JSON.stringify(log));
+  renderLog();
+}
+
+function clearLog() {
+  localStorage.removeItem(LOG_KEY);
+  renderLog();
+}
+
+let logFilter = 'all'; // 'all' | 'sanpham' | 'thung' | 'cong' | 'text'
+
+function renderLog() {
+  const allLog   = loadLog();
+  const list     = document.getElementById('log-list');
+  const empty    = document.getElementById('log-empty');
+  const clearBtn = document.getElementById('log-clear');
+  const filters  = document.getElementById('log-filters');
+
+  // Render filter buttons
+  const filterTypes = ['all', ...Object.keys(TYPE_META)];
+  filters.innerHTML = filterTypes.map(t => {
+    const meta    = TYPE_META[t];
+    const active  = logFilter === t;
+    const label   = meta ? meta.label : 'Tất cả';
+    const style   = active && meta
+      ? `background:${meta.color};color:${meta.text};outline:2px solid ${meta.text}`
+      : active ? 'outline:2px solid #374151' : '';
+    return `<button class="btn btn--secondary btn--sm" data-filter="${t}" style="${style}">${label}</button>`;
+  }).join('');
+
+  filters.onclick = e => {
+    const btn = e.target.closest('[data-filter]');
+    if (!btn) return;
+    logFilter = btn.dataset.filter;
+    renderLog();
+  };
+
+  // Lọc danh sách
+  const log = logFilter === 'all' ? allLog : allLog.filter(e => e.type === logFilter);
+
+  list.innerHTML         = '';
+  empty.style.display    = log.length    ? 'none'         : 'block';
+  clearBtn.style.display = allLog.length ? 'inline-block' : 'none';
+
+  log.forEach(entry => {
+    const meta = TYPE_META[entry.type] ?? TYPE_META.text;
+    const item = document.createElement('div');
+    item.className = 'log-item';
+    item.innerHTML = `
+      <canvas class="log-canvas" id="lc-${entry.id}"></canvas>
+      <div class="log-info">
+        <span class="log-badge" style="background:${meta.color};color:${meta.text}">${meta.label}</span>
+        <span class="log-text">${entry.text}</span>
+        <span class="log-time">${entry.time}</span>
+      </div>
+      <div class="log-actions">
+        <button class="btn btn--secondary btn--sm" data-id="${entry.id}" data-action="view">Xem</button>
+        <button class="btn btn--danger    btn--sm" data-id="${entry.id}" data-action="del">✕</button>
+      </div>
+    `;
+    list.appendChild(item);
+    renderQR(entry.text, document.getElementById(`lc-${entry.id}`), 1, entry.colors);
+  });
+
+  list.onclick = e => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const id = Number(btn.dataset.id);
+    if (btn.dataset.action === 'del') {
+      deleteLogEntry(id);
+    } else {
+      const entry = loadLog().find(e => e.id === id);
+      if (entry) displayQR(entry.text, entry.colors);
+    }
+  };
 }
 
 /* ================================================================
@@ -302,7 +420,7 @@ function buildRegexSection() {
       let text;
       try { text = randFromRegex(document.getElementById(`regex-${id}`).value); }
       catch (e) { alert(`Regex không hợp lệ: ${e.message}`); return; }
-      showQR(text);
+      showQR(text, id); // id = 'sanpham' | 'thung' | 'cong'
     });
   });
 }
@@ -381,6 +499,11 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSizeControl();
   buildRegexSection();
   setupTextSection();
+  renderLog();
+
+  document.getElementById('log-clear').addEventListener('click', () => {
+    if (confirm('Xóa toàn bộ lịch sử?')) clearLog();
+  });
 
   document.getElementById('download-btn').addEventListener('click', () => {
     const canvas = document.getElementById('qr-canvas');
