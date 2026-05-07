@@ -161,6 +161,15 @@ h1 { font-size: 1.4rem; font-weight: 700; }
   text-align: center;
 }
 
+.qr-text-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+}
+
+.qr-text-row .qr-text { flex: 1; }
+
 #qr-canvas {
   border-radius: 6px;
   border: 1px solid #e5e7eb;

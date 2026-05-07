@@ -270,6 +270,7 @@ function displayQR(text, colors) {
   canvas.style.display = 'block';
   document.getElementById('qr-text').textContent = text;
   document.getElementById('download-btn').style.display = 'inline-block';
+  document.getElementById('copy-btn').style.display     = 'inline-block';
 }
 
 // Render lại kích thước (không đổi màu, không lưu log)
@@ -370,6 +371,7 @@ function renderLog() {
       </div>
       <div class="log-actions">
         <button class="btn btn--secondary btn--sm" data-id="${entry.id}" data-action="view">Xem</button>
+        <button class="btn btn--secondary btn--sm" data-id="${entry.id}" data-action="copy">Copy</button>
         <button class="btn btn--danger    btn--sm" data-id="${entry.id}" data-action="del">✕</button>
       </div>
     `;
@@ -381,10 +383,16 @@ function renderLog() {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
     const id = Number(btn.dataset.id);
+    const entry = loadLog().find(e => e.id === id);
     if (btn.dataset.action === 'del') {
       deleteLogEntry(id);
+    } else if (btn.dataset.action === 'copy') {
+      navigator.clipboard.writeText(entry.text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = '✓';
+        setTimeout(() => { btn.textContent = orig; }, 1200);
+      });
     } else {
-      const entry = loadLog().find(e => e.id === id);
       if (entry) displayQR(entry.text, entry.colors);
     }
   };
@@ -503,6 +511,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('log-clear').addEventListener('click', () => {
     if (confirm('Xóa toàn bộ lịch sử?')) clearLog();
+  });
+
+  document.getElementById('copy-btn').addEventListener('click', () => {
+    const text = document.getElementById('qr-text').textContent;
+    navigator.clipboard.writeText(text).then(() => flashBtn('copy-btn', 'Đã copy ✓'));
   });
 
   document.getElementById('download-btn').addEventListener('click', () => {
