@@ -4,7 +4,7 @@
 
 const PALETTE = ['#16a34a', '#dc2626', '#111111', '#2563eb']; // xanh lá, đỏ, đen, xanh dương
 
-const YEAR = new Date().getFullYear();
+const YEAR = new Date().getFullYear().toString().slice(-2);
 
 const QR_TYPES = [
   { id: 'sanpham', label: 'Sản phẩm', defaultRegex: `https://traceviet\\.mae\\.gov\\.vn/02/AI\\d{15}(SAURIENGA|SAU_RIENG_THAIA)\\d{5}` },

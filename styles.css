@@ -156,6 +156,7 @@ h1 { font-size: 1.4rem; font-weight: 700; }
 
 /* ── QR display (right col) ─────────────────────────────────── */
 .qr-display {
+  width: 333px;;
   align-items: center;
   text-align: center;
 }
